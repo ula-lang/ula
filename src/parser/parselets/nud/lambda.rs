@@ -5,6 +5,7 @@ use ast::Expr;
 use lexer::Keyword;
 use lexer::Op;
 use ast::exprs::Lambda;
+use ast::stmts::Return;
 
 pub struct LambdaParselet;
 
@@ -38,7 +39,7 @@ impl Nud for LambdaParselet {
             if parser.next_is(Token::LBrace) {
                 parser.parse_block()?
             } else {
-                vec![parser.parse_expr(None)?.into()]
+                vec![Return::new(Some(parser.parse_expr(None)?)).into()]
             }
         };
 
