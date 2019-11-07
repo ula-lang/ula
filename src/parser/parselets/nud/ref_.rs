@@ -1,8 +1,8 @@
-use ast::Expr;
-use ast::exprs::Ref;
-use lexer::{Op, Token};
-use parser::parselets::Nud;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::ast::exprs::Ref;
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Nud;
+use crate::parser::Parser;
 
 pub struct RefParselet;
 

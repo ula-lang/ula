@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::Expr;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Sub {
@@ -25,8 +25,8 @@ impl Into<Expr> for Sub {
 }
 
 impl Compilable for Sub {
-    fn compile(&self) -> String {
-        format!("({} - {})", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("({} - {})", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

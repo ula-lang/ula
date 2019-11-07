@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::Expr;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct FCall {
@@ -23,8 +23,8 @@ impl FCall {
 }
 
 impl Compilable for FCall {
-    fn compile(&self) -> String {
-        format!("{}({})", self.lhs.compile(), self.args.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("{}({})", self.lhs.compile(scope), self.args.compile(scope))
     }
 }
 

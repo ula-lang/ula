@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::{Expr, Stmt};
-use compilation::Compilable;
+use crate::ast::{Expr, Stmt};
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct ForEach {
@@ -21,7 +21,9 @@ impl ForEach {
 }
 
 impl Compilable for ForEach {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
+        let scope = &scope.create_child();
+
         let mut compiled = String::new();
 
         compiled.push_str(&format!("for {}", self.vars.0));
@@ -30,9 +32,9 @@ impl Compilable for ForEach {
             compiled.push_str(&format!(", {}", var1));
         }
 
-        compiled.push_str(&format!(" in {} do\r\n", self.expr.compile()));
+        compiled.push_str(&format!(" in {} do\r\n", self.expr.compile(scope)));
 
-        compiled.push_str(&self.body.compile_indented(1));
+        compiled.push_str(&self.body.compile_indented(scope, 1));
 
         compiled.push_str("\r\nend");
 

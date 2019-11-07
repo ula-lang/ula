@@ -1,13 +1,13 @@
 use std::fmt;
 
-use ast::{Expr, Stmt};
-use compilation::Compilable;
+use crate::ast::{Expr, Stmt};
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct IfElse {
     cond: Expr,
     body: Vec<Stmt>,
-    else_body: Option<Vec<Stmt>>
+    else_body: Option<Vec<Stmt>>,
 }
 
 impl IfElse {
@@ -15,19 +15,21 @@ impl IfElse {
         Self {
             cond: cond.into(),
             body,
-            else_body
+            else_body,
         }
     }
 }
 
 impl Compilable for IfElse {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
+        let scope = &scope.create_child();
+
         let mut compiled = String::new();
 
-        compiled.push_str(&format!("if {} then\r\n{}\r\n", self.cond.compile(), self.body.compile_indented(1)));
+        compiled.push_str(&format!("if {} then\r\n{}\r\n", self.cond.compile(scope), self.body.compile_indented(scope, 1)));
 
         if let Some(ref else_body) = self.else_body {
-            compiled.push_str(&format!("else\r\n{}\r\n", else_body.compile_indented(1)));
+            compiled.push_str(&format!("else\r\n{}\r\n", else_body.compile_indented(scope, 1)));
         }
 
         compiled.push_str("end");

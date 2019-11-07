@@ -1,11 +1,11 @@
-use parser::parselets::Nud;
-use parser::Parser;
-use lexer::Token;
-use ast::Expr;
-use lexer::Keyword;
-use lexer::Op;
-use ast::exprs::Lambda;
-use ast::stmts::Return;
+use crate::parser::parselets::Nud;
+use crate::parser::Parser;
+use crate::lexer::Token;
+use crate::ast::Expr;
+use crate::lexer::Keyword;
+use crate::lexer::Op;
+use crate::ast::exprs::Lambda;
+use crate::ast::stmts::Return;
 
 pub struct LambdaParselet;
 

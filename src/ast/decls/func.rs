@@ -1,8 +1,9 @@
-use ast::{Expr, Node, Stmt};
-use ast::exprs::{Assignment, Cond, Const, Dot, Eq, FCall, Lambda, Ref};
-use ast::stmts::{Import, Return};
-use compilation::Compilable;
+use crate::ast::{Expr, Node, Stmt};
+use crate::ast::exprs::{Assignment, Coalesce, Cond, Const, Dot, Eq, FCall, Lambda, Ref};
+use crate::ast::stmts::{Import, Return};
+use crate::compilation::{Compilable, Scope};
 use std::fmt;
+use crate::ast::stmts::IfElse;
 
 #[derive(Clone)]
 pub struct FuncDecl {
@@ -33,23 +34,13 @@ impl FuncDecl {
 
                 body.insert(
                     i,
-                    Stmt::Expr(
-                        Assignment::new(
-                            ident_ref.clone(),
-                            FCall::new(
-                                Cond::new(
-                                    Eq::new(ident_ref.clone(), Const::Nil),
-                                    Lambda::new((false, ), Vec::new(), vec![
-                                        Return::new(Some(default)).into()
-                                    ]),
-                                    Lambda::new((false, ), Vec::new(), vec![
-                                        Return::new(Some(ident_ref)).into()
-                                    ]),
-                                ),
-                                Vec::new(),
-                            ),
-                        ).into(),
-                    ).into(),
+                    IfElse::new(
+                        Eq::new(ident_ref.clone(), Const::Nil),
+                        vec![
+                            Stmt::Expr(Assignment::new(ident_ref.clone(), default).into())
+                        ],
+                        None
+                    ).into()
                 );
 
                 i += 1;
@@ -87,7 +78,9 @@ impl FuncDecl {
 }
 
 impl Compilable for FuncDecl {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
+        scope.add_function(&self.ident);
+
         let mut compiled = String::new();
 
         if self.is_local() {
@@ -126,9 +119,9 @@ impl Compilable for FuncDecl {
                 ).into()
             ];
 
-            compiled.push_str(&async_body.compile_indented(1));
+            compiled.push_str(&async_body.compile_indented(scope, 1));
         } else {
-            compiled.push_str(&self.body.compile_indented(1));
+            compiled.push_str(&self.body.compile_indented(scope, 1));
         }
 
         compiled.push_str("\r\nend");

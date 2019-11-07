@@ -1,8 +1,8 @@
-use ast::Expr;
-use ast::exprs::{Eq, Ne};
-use lexer::{Op, Token};
-use parser::parselets::Led;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::ast::exprs::{Eq, Ne};
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
 
 pub struct EqualityParselet;
 

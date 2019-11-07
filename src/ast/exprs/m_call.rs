@@ -1,8 +1,8 @@
 use std::fmt;
 
-use ast::Expr;
-use ast::exprs::FCall;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::ast::exprs::FCall;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct MCall {
@@ -20,8 +20,8 @@ impl MCall {
 }
 
 impl Compilable for MCall {
-    fn compile(&self) -> String {
-        format!("{}:{}", self.lhs.compile(), self.f_call.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("{}:{}", self.lhs.compile(scope), self.f_call.compile(scope))
     }
 }
 

@@ -45,6 +45,7 @@ pub enum Op {
     RShift,
 
     // Misc
+    Coalesce,
     Concat,
     Cond,
     Dot,
@@ -101,6 +102,7 @@ impl fmt::Display for Op {
             &Op::RShift => write!(f, ">>"),
 
             // Misc
+            &Op::Coalesce => write!(f, "??"),
             &Op::Concat => write!(f, ".."),
             &Op::Cond => write!(f, "?"),
             &Op::Dot => write!(f, "."),

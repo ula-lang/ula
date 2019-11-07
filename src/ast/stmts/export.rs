@@ -1,7 +1,7 @@
-use ast::exprs::{Const, Ref, Table};
-use ast::Stmt;
-use ast::stmts::Return;
-use compilation::Compilable;
+use crate::ast::exprs::{Const, Ref, Table};
+use crate::ast::Stmt;
+use crate::ast::stmts::Return;
+use crate::compilation::{Compilable, Scope};
 use std::fmt;
 
 #[derive(Clone)]
@@ -18,14 +18,14 @@ impl Export {
 }
 
 impl Compilable for Export {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         let mut table = Table::new();
 
         for ident in &self.idents {
             table.insert(Const::from(ident), Ref::new(ident));
         }
 
-        Return::new(Some(table)).compile()
+        Return::new(Some(table)).compile(scope)
     }
 }
 

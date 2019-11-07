@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::{Expr, Stmt};
-use compilation::Compilable;
+use crate::ast::{Expr, Stmt};
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct VarDecl {
@@ -19,11 +19,13 @@ impl VarDecl {
 }
 
 impl Compilable for VarDecl {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
+        self.idents.iter().for_each(|ident| scope.add_variable(ident));
+
         let mut compiled = format!("local {}", self.idents.join(", "));
 
         if let Some(ref init_exprs) = self.init_exprs {
-            compiled.push_str(&format!(" = {}", init_exprs.compile()));
+            compiled.push_str(&format!(" = {}", init_exprs.compile(scope)));
         }
 
         compiled.push(';');

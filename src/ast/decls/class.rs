@@ -1,10 +1,10 @@
 use std::fmt;
 
-use ast::decls::FuncDecl;
-use ast::{Expr, Node, Stmt};
-use ast::stmts::{IfElse, Return, VarDecl};
-use ast::exprs::{Assignment, Const, Eq, FCall, Table, Ref};
-use compilation::Compilable;
+use crate::ast::decls::FuncDecl;
+use crate::ast::{Expr, Node, Stmt};
+use crate::ast::stmts::{IfElse, Return, VarDecl};
+use crate::ast::exprs::{Assignment, Const, Eq, FCall, Table, Ref};
+use crate::compilation::{Compilable, Scope};
 
 pub struct ClassDecl {
     /// 0: Local, 1: Static
@@ -104,7 +104,9 @@ impl ClassDecl {
 }
 
 impl Compilable for ClassDecl {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
+        scope.add_class(&self.ident);
+
         let mut compiled = String::new();
 
         compiled.push_str(&format!("--[[ Begin class: {:?} ]]--\r\n", self.ident));
@@ -118,7 +120,7 @@ impl Compilable for ClassDecl {
         for (i, &(ref ident, ref def)) in self.fields.iter().enumerate() {
             match def {
                 &Some(ref def) => {
-                    compiled.push_str(&format!("\r\n    {} = {}", ident, def.compile()));
+                    compiled.push_str(&format!("\r\n    {} = {}", ident, def.compile(scope)));
                 }
 
                 &None => {
@@ -145,7 +147,7 @@ impl Compilable for ClassDecl {
         if let Some(ref ctor) = self.ctor {
             // Add ctor
             compiled.push_str("\r\n--[[ <Constructor> ]]--\r\n");
-            compiled.push_str(&ctor.compile());
+            compiled.push_str(&ctor.compile(scope));
             compiled.push_str("\r\n--[[ </Constructor> ]]--\r\n");
         }
 
@@ -153,7 +155,7 @@ impl Compilable for ClassDecl {
         if self.methods.len() > 0 {
             compiled.push_str("\r\n--[[ <Methods> ]]--\r\n");
             for (i, method) in self.methods.iter().enumerate() {
-                compiled.push_str(&method.compile());
+                compiled.push_str(&method.compile(scope));
 
                 if i + 1 < self.methods.len() {
                     compiled.push_str("\r\n\r\n");

@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct LOr {
@@ -20,8 +20,8 @@ impl LOr {
 }
 
 impl Compilable for LOr {
-    fn compile(&self) -> String {
-        format!("({} or {})", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("({} or {})", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

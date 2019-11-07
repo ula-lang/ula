@@ -1,8 +1,8 @@
 use std::fmt;
 
-use ast::Expr;
-use ast::exprs::{Const, FCall};
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::ast::exprs::{Const, FCall};
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct New {
@@ -22,8 +22,8 @@ impl New {
 }
 
 impl Compilable for New {
-    fn compile(&self) -> String {
-        format!("{}.{}", self.ident, self.ctor_call.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("{}.{}", self.ident, self.ctor_call.compile(scope))
     }
 }
 

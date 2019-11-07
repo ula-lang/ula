@@ -1,11 +1,13 @@
-pub trait Compilable {
-    fn compile(&self) -> String;
+use super::Scope;
 
-    fn compile_indented(&self, amount: usize) -> String {
+pub trait Compilable {
+    fn compile(&self, scope: &Scope) -> String;
+
+    fn compile_indented(&self, scope: &Scope, amount: usize) -> String {
         let indent = (0..(amount * 4)).map(|_| ' ').collect::<String>();
         let mut compiled = String::new();
 
-        let sub_compiled = self.compile();
+        let sub_compiled = self.compile(scope);
 
         let lines: Vec<(usize, &str)> = sub_compiled.lines().enumerate().collect();
 
@@ -20,14 +22,18 @@ pub trait Compilable {
 
         compiled
     }
+
+    fn is_pure(&self) -> bool {
+        false
+    }
 }
 
-impl<T: Compilable> Compilable for Vec<T> {
-    default fn compile(&self) -> String {
+impl<T> Compilable for Vec<T> where T: Compilable {
+    default fn compile(&self, scope: &Scope) -> String {
         let mut compiled = String::new();
 
         for (i, compilable) in self.iter().enumerate() {
-            compiled.push_str(&compilable.compile());
+            compiled.push_str(&compilable.compile(scope));
 
             if i + 1 < self.len() {
                 compiled.push_str("\r\n")
@@ -35,5 +41,9 @@ impl<T: Compilable> Compilable for Vec<T> {
         }
 
         compiled
+    }
+
+    default fn is_pure(&self) -> bool {
+        self.iter().all(|c| c.is_pure())
     }
 }

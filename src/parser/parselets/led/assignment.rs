@@ -1,8 +1,8 @@
-use ast::Expr;
-use lexer::{Op, Token};
-use parser::parselets::Led;
-use parser::Parser;
-use ast::exprs::{Assignment, BAnd, BOr, Div, LShift, Mod, Mul, RShift, Sub, Sum, Xor};
+use crate::ast::Expr;
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
+use crate::ast::exprs::{Assignment, BAnd, BOr, Div, LShift, Mod, Mul, RShift, Sub, Sum, Xor};
 
 pub struct AssignmentParselet;
 

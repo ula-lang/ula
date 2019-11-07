@@ -1,11 +1,12 @@
-use ast::decls::FuncDecl;
-use ast::Expr;
-use ast::stmts::*;
-use compilation::Compilable;
+use crate::ast::decls::FuncDecl;
+use crate::ast::Expr;
+use crate::ast::stmts::*;
+use crate::compilation::{Compilable, Scope};
 use std::fmt;
 
 #[derive(Clone)]
 pub enum Stmt {
+    Break,
     Export(Export),
     Expr(Expr),
     For(For),
@@ -16,63 +17,72 @@ pub enum Stmt {
     Import(Import),
     VarDecl(VarDecl),
     Return(Return),
+    SwitchCase(SwitchCase),
     While(While),
-    Yield(Yield)
+    Yield(Yield),
 }
 
 impl Compilable for Stmt {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         match self {
+            &Stmt::Break => {
+                "break;".to_owned()
+            }
+
             &Stmt::Export(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::Expr(ref expr) => {
-                format!("{};", expr.compile())
+                format!("{};", expr.compile(scope))
             }
 
             &Stmt::For(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::ForEach(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::FuncDecl(ref decl) => {
-                format!("{}", decl.compile())
+                format!("{}", decl.compile(scope))
             }
 
             &Stmt::IfElse(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::Import(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::VarDecl(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::Return(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
+            }
+
+            &Stmt::SwitchCase(ref stmt) => {
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::While(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
 
             &Stmt::Yield(ref stmt) => {
-                format!("{}", stmt.compile())
+                format!("{}", stmt.compile(scope))
             }
         }
     }
 }
 
-impl From<Expr> for Stmt {
-    fn from(expr: Expr) -> Self {
-        Stmt::Expr(expr)
+impl<T> From<T> for Stmt where T: Into<Expr> {
+    fn from(expr: T) -> Self {
+        Stmt::Expr(expr.into())
     }
 }
 
@@ -81,6 +91,10 @@ impl fmt::Debug for Stmt {
         write!(f, "Stmt(")?;
 
         match self {
+            &Stmt::Break => {
+                write!(f, "Break")?
+            }
+
             &Stmt::Export(ref stmt) => {
                 write!(f, "{:?}", stmt)?
             }
@@ -114,6 +128,10 @@ impl fmt::Debug for Stmt {
             }
 
             &Stmt::Return(ref stmt) => {
+                write!(f, "{:?}", stmt)?
+            }
+
+            &Stmt::SwitchCase(ref stmt) => {
                 write!(f, "{:?}", stmt)?
             }
 

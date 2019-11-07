@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Mod {
@@ -20,8 +20,8 @@ impl Mod {
 }
 
 impl Compilable for Mod {
-    fn compile(&self) -> String {
-        format!("({} % {})", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("({} % {})", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

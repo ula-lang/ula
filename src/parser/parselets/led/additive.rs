@@ -1,8 +1,8 @@
-use ast::Expr;
-use lexer::{Op, Token};
-use parser::parselets::Led;
-use parser::Parser;
-use ast::exprs::{Sub, Sum};
+use crate::ast::Expr;
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
+use crate::ast::exprs::{Sub, Sum};
 
 pub struct AdditiveParselet;
 

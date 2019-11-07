@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 /// Conditional expression (<expr> ? <expr> : <expr>)
 #[derive(Clone)]
@@ -28,12 +28,12 @@ impl Cond {
 }
 
 impl Compilable for Cond {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         format!(
             "Either({}, {}, {})",
-            self.cond.compile(),
-            self.expr_a.compile(),
-            self.expr_b.compile()
+            self.cond.compile(scope),
+            self.expr_a.compile(scope),
+            self.expr_b.compile(scope)
         )
     }
 }

@@ -1,8 +1,8 @@
-use ast::Expr;
-use ast::exprs::{Const, Table};
-use lexer::{Op, Token};
-use parser::parselets::Nud;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::ast::exprs::{Const, Table};
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Nud;
+use crate::parser::Parser;
 
 pub struct TableParselet;
 
@@ -17,6 +17,8 @@ impl Nud for TableParselet {
                 match parser.peek(0)? {
                     // Expression key
                     Token::LBracket => {
+                        parser.expect(Token::LBracket)?;
+
                         let key = parser.parse_expr(None)?;
 
                         parser.expect(Token::RBracket)?;

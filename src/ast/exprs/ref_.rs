@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::Expr;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Ref {
@@ -21,7 +21,7 @@ impl Ref {
 }
 
 impl Compilable for Ref {
-    fn compile(&self) -> String {
+    fn compile(&self, _scope: &Scope) -> String {
         format!("{}", self.ident)
     }
 }

@@ -1,8 +1,8 @@
 use std::fmt;
 
-use ast::{Expr, Stmt};
-use compilation::Compilable;
-use ast::stmts::While;
+use crate::ast::{Expr, Stmt};
+use crate::compilation::{Compilable, Scope};
+use crate::ast::stmts::While;
 
 #[derive(Clone)]
 pub struct For {
@@ -23,16 +23,18 @@ impl For {
 }
 
 impl Compilable for For {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
+        let scope = &scope.create_child();
+
         let mut compiled = String::new();
 
         compiled.push_str("do\r\n");
 
-        compiled.push_str(&self.init.compile_indented(1));
+        compiled.push_str(&self.init.compile_indented(scope, 1));
 
         compiled.push_str("\r\n");
 
-        compiled.push_str(&self.while_stmt.compile_indented(1));
+        compiled.push_str(&self.while_stmt.compile_indented(scope, 1));
 
         compiled.push_str("\r\nend");
 

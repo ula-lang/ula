@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Xor {
@@ -20,8 +20,8 @@ impl Xor {
 }
 
 impl Compilable for Xor {
-    fn compile(&self) -> String {
-        format!("bit.bxor({}, {})", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("bit.bxor({}, {})", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

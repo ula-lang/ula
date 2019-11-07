@@ -1,10 +1,10 @@
-use ast::{Expr, Node, Stmt, Tree};
-use ast::decls::*;
-use ast::stmts::*;
-use lexer::*;
-use parser::parselets::{Led, Nud};
-use parser::parselets::led::*;
-use parser::parselets::nud::*;
+use crate::ast::{Expr, Node, Stmt, Tree};
+use crate::ast::decls::*;
+use crate::ast::stmts::*;
+use crate::lexer::*;
+use crate::parser::parselets::{Led, Nud};
+use crate::parser::parselets::led::*;
+use crate::parser::parselets::nud::*;
 use std::collections::VecDeque;
 
 pub struct Parser {
@@ -65,9 +65,7 @@ impl Parser {
                         }
                     }
 
-                    if self.next_is(Token::RBrace) {
-                        self.consume().unwrap();
-                    }
+                    self.consume_a(Token::RBrace);
                 }
             }
         }
@@ -117,6 +115,14 @@ impl Parser {
 
     fn parse_stmt(&mut self) -> Result<Stmt, String> {
         Ok(match self.peek(0)? {
+            Token::Keyword(Keyword::Break) => {
+                self.expect(Keyword::Break)?;
+
+                self.expect(Token::Semicolon)?;
+
+                Stmt::Break
+            }
+
             Token::Keyword(Keyword::Export) => self.parse_export_stmt()?.into(),
 
             Token::Keyword(Keyword::For) => self.parse_for_stmt()?.into(),
@@ -126,6 +132,8 @@ impl Parser {
             Token::Keyword(Keyword::Import) => self.parse_import_stmt()?.into(),
 
             Token::Keyword(Keyword::Return) => self.parse_return_stmt()?.into(),
+
+            Token::Keyword(Keyword::Switch) => self.parse_switch_case_stmt()?.into(),
 
             Token::Keyword(Keyword::Var) => self.parse_var_decl_stmt()?.into(),
 
@@ -173,9 +181,7 @@ impl Parser {
 
         let mut parent = None;
 
-        if self.next_is(Keyword::Extends) {
-            self.consume()?;
-
+        if self.consume_a(Keyword::Extends) {
             parent = Some(self.parse_ident()?)
         }
 
@@ -193,9 +199,7 @@ impl Parser {
                     if m_flags == (false, true, false) {
                         let mut field = (ident.to_owned(), None);
 
-                        if self.next_is(Op::Assign) {
-                            self.consume()?;
-
+                        if self.consume_a(Op::Assign) {
                             field.1 = Some(self.parse_expr(None)?);
                         }
 
@@ -255,9 +259,7 @@ impl Parser {
         let fields = self.parse_delimited(Token::Comma, |p| {
             let mut field = (p.parse_ident()?, None);
 
-            if p.next_is(Op::Assign) {
-                p.consume()?;
-
+            if p.consume_a(Op::Assign) {
                 field.1 = Some(p.parse_expr(None)?);
             }
 
@@ -338,9 +340,7 @@ impl Parser {
 
         let (body, mut else_body) = (self.parse_block()?, None);
 
-        if self.next_is(Keyword::Else) {
-            self.consume()?;
-
+        if self.consume_a(Keyword::Else) {
             if self.next_is(Keyword::If) {
                 else_body = Some(vec![self.parse_if_else_stmt()?.into()])
             } else {
@@ -391,6 +391,43 @@ impl Parser {
         self.expect(Token::Semicolon)?;
 
         Ok(Return::new(expr))
+    }
+
+    fn parse_switch_case_stmt(&mut self) -> Result<SwitchCase, String> {
+        self.expect(Keyword::Switch)?;
+
+        let term = self.parse_expr(None)?;
+        
+        self.expect(Token::LBrace)?;
+
+        let mut cases = Vec::new();
+
+        while !self.next_is(Token::RBrace) {
+            self.expect(Keyword::Case)?;
+
+            let cond = self.parse_expr(Some(13))?;
+
+            self.expect(Token::Colon)?;
+
+            let body = if self.next_is(Token::LBrace) {
+                println!("z");
+                self.parse_block()?
+            } else {
+                let mut body = Vec::new();
+
+                while !self.next_is_in(&[Token::RBrace, Keyword::Case.into()]) {
+                    body.push(self.parse_stmt()?);
+                }
+
+                body
+            };
+
+            cases.push((cond, body));
+        }
+
+        self.expect(Token::RBrace)?;
+
+        Ok(SwitchCase::new(term, cases))
     }
 
     fn parse_var_decl_stmt(&mut self) -> Result<VarDecl, String> {
@@ -465,6 +502,16 @@ impl Parser {
         } else {
             Err(format!("Unexpected {}, expecting {}", got, expected))
         }
+    }
+
+    pub fn consume_a<E>(&mut self, expected: E) -> bool where E: Into<Token> {
+        return if self.next_is(expected) {
+            self.consume().expect("Internal error");
+
+            true
+        } else {
+            false
+        };
     }
 
     pub fn next_is<E>(&mut self, expected: E) -> bool where E: Into<Token> {
@@ -570,9 +617,7 @@ impl Parser {
     pub fn parse_params(&mut self) -> Result<Vec<(String, Option<Expr>)>, String> {
         self.parse_delimited(Token::Comma, |p| {
             let ident = {
-                if p.next_is(Op::Ellipsis) {
-                    p.consume()?;
-
+                if p.consume_a(Op::Ellipsis) {
                     "...".to_owned()
                 } else {
                     p.parse_ident()?
@@ -581,10 +626,8 @@ impl Parser {
 
             let mut param = (ident, None);
 
-            if p.next_is(Op::Assign) {
-                p.consume()?;
-
-                param.1 = Some(p.parse_expr(None)?);
+            if p.consume_a(Op::Assign) {
+                param.1 = Some(p.parse_expr(Some(6))?);
             }
 
             Ok(param)
@@ -616,11 +659,11 @@ impl Parser {
 
 
     // <Parselet Fetchers>
-    fn get_led_parselet(token: &Token) -> Result<Option<Box<Led>>, String> {
+    fn get_led_parselet<'a>(token: &Token) -> Result<Option<&'a dyn Led>, String> {
         match token {
             // Additive
             &Token::Op(Op::Add)
-            | &Token::Op(Op::Sub) => Ok(Some(Box::new(AdditiveParselet))),
+            | &Token::Op(Op::Sub) => Ok(Some(&AdditiveParselet)),
 
             // Assignment
             &Token::Op(Op::Assign)
@@ -633,85 +676,88 @@ impl Parser {
             | &Token::Op(Op::BOrAssign)
             | &Token::Op(Op::XorAssign)
             | &Token::Op(Op::LShiftAssign)
-            | &Token::Op(Op::RShiftAssign) => Ok(Some(Box::new(AssignmentParselet))),
+            | &Token::Op(Op::RShiftAssign) => Ok(Some(&AssignmentParselet)),
 
             // Bitwise AND
-            Token::Op(Op::BAnd) => Ok(Some(Box::new(BAndParselet))),
+            Token::Op(Op::BAnd) => Ok(Some(&BAndParselet)),
 
             // Bitwise OR
-            Token::Op(Op::BOr) => Ok(Some(Box::new(BOrParselet))),
+            Token::Op(Op::BOr) => Ok(Some(&BOrParselet)),
 
             // Call
             &Token::LParens
-            | &Token::Colon => Ok(Some(Box::new(CallParselet))),
+            | &Token::Colon => Ok(Some(&CallParselet)),
+
+            // Coalesce
+            &Token::Op(Op::Coalesce) => Ok(Some(&CoalesceParselet)),
 
             // Concat
-            &Token::Op(Op::Concat) => Ok(Some(Box::new(ConcatParselet))),
+            &Token::Op(Op::Concat) => Ok(Some(&ConcatParselet)),
 
             // Cond
-            &Token::Op(Op::Cond) => Ok(Some(Box::new(CondParselet))),
+            &Token::Op(Op::Cond) => Ok(Some(&CondParselet)),
 
             // Dot
-            &Token::Op(Op::Dot) => Ok(Some(Box::new(DotParselet))),
+            &Token::Op(Op::Dot) => Ok(Some(&DotParselet)),
 
             // Equality
             &Token::Op(Op::Eq)
-            | &Token::Op(Op::Ne) => Ok(Some(Box::new(EqualityParselet))),
+            | &Token::Op(Op::Ne) => Ok(Some(&EqualityParselet)),
 
             // Index
-            &Token::LBracket => Ok(Some(Box::new(IndexParselet))),
+            &Token::LBracket => Ok(Some(&IndexParselet)),
 
             // Multiplicative
             &Token::Op(Op::Mul)
             | &Token::Op(Op::Div)
-            | &Token::Op(Op::Mod) => Ok(Some(Box::new(MultiplicativeParselet))),
+            | &Token::Op(Op::Mod) => Ok(Some(&MultiplicativeParselet)),
 
             // Postfix
             &Token::Op(Op::Incr)
-            | &Token::Op(Op::Decr) => Ok(Some(Box::new(PostfixParselet))),
+            | &Token::Op(Op::Decr) => Ok(Some(&PostfixParselet)),
 
             // Relational
             &Token::Op(Op::Lt)
             | &Token::Op(Op::Gt)
             | &Token::Op(Op::LtEq)
-            | &Token::Op(Op::GtEq) => Ok(Some(Box::new(RelationalParselet))),
+            | &Token::Op(Op::GtEq) => Ok(Some(&RelationalParselet)),
 
             // Shift
             &Token::Op(Op::LShift)
-            | Token::Op(Op::RShift) => Ok(Some(Box::new(ShiftParselet))),
+            | Token::Op(Op::RShift) => Ok(Some(&ShiftParselet)),
 
             // Logical AND
-            &Token::Op(Op::LAnd) => Ok(Some(Box::new(LAndParselet))),
+            &Token::Op(Op::LAnd) => Ok(Some(&LAndParselet)),
 
             // Logical OR
-            &Token::Op(Op::LOr) => Ok(Some(Box::new(LOrParselet))),
+            &Token::Op(Op::LOr) => Ok(Some(&LOrParselet)),
 
             // XOR
-            &Token::Op(Op::Xor) => Ok(Some(Box::new(XorParselet))),
+            &Token::Op(Op::Xor) => Ok(Some(&XorParselet)),
 
             _ => Ok(None)
         }
     }
 
-    fn get_nud_parselet(token: &Token) -> Result<Box<Nud>, String> {
+    fn get_nud_parselet<'a>(token: &Token) -> Result<&'a dyn Nud, String> {
         match token {
             // Const
-            &Token::Literal(_) => Ok(Box::new(ConstParselet)),
+            &Token::Literal(_) => Ok(&ConstParselet),
 
             // Lambda
             &Token::Op(Op::LOr)
             | &Token::Op(Op::BOr)
-            | &Token::Keyword(Keyword::Async) => Ok(Box::new(LambdaParselet)),
+            | &Token::Keyword(Keyword::Async) => Ok(&LambdaParselet),
 
             // Parens
-            &Token::LParens => Ok(Box::new(ParensParselet)),
+            &Token::LParens => Ok(&ParensParselet),
 
             // Reference
             &Token::Ident(_)
-            | &Token::Op(Op::Ellipsis) => Ok(Box::new(RefParselet)),
+            | &Token::Op(Op::Ellipsis) => Ok(&RefParselet),
 
             // Table
-            &Token::LBrace => Ok(Box::new(TableParselet)),
+            &Token::LBrace => Ok(&TableParselet),
 
             // Unary
             &Token::Keyword(Keyword::Await)
@@ -721,7 +767,7 @@ impl Parser {
             | &Token::Op(Op::Incr)
             | &Token::Op(Op::Decr)
             | &Token::Op(Op::Sub)
-            | &Token::Op(Op::Not) => Ok(Box::new(UnaryParselet)),
+            | &Token::Op(Op::Not) => Ok(&UnaryParselet),
 
             t => Err(format!("Unexpected {}, expecting expression", t))
         }

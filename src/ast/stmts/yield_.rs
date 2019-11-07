@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::{Expr, Stmt};
-use compilation::Compilable;
+use crate::ast::{Expr, Stmt};
+use crate::compilation::{Compilable, Scope};
 
 // Yield statement (yield <expr?>)
 #[derive(Clone)]
@@ -18,8 +18,8 @@ impl Yield {
 }
 
 impl Compilable for Yield {
-    fn compile(&self) -> String {
-        format!("coroutine.yield({});", self.expr.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("coroutine.yield({});", self.expr.compile(scope))
     }
 }
 

@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 /// Unary negation expression (-<expr>)
 #[derive(Clone)]
@@ -19,8 +19,8 @@ impl Neg {
 }
 
 impl Compilable for Neg {
-    fn compile(&self) -> String {
-        format!("(-{})", self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("(-{})", self.rhs.compile(scope))
     }
 }
 

@@ -1,8 +1,8 @@
-use ast::Expr;
-use lexer::Token;
-use parser::parselets::Led;
-use parser::Parser;
-use ast::exprs::{FCall, MCall, Ref};
+use crate::ast::Expr;
+use crate::lexer::Token;
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
+use crate::ast::exprs::{FCall, MCall, Ref};
 
 pub struct CallParselet;
 

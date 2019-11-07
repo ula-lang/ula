@@ -1,8 +1,8 @@
-use ast::Expr;
-use ast::exprs::Xor;
-use lexer::{Op, Token};
-use parser::parselets::Led;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::ast::exprs::Xor;
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
 
 pub struct XorParselet;
 

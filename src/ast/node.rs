@@ -1,8 +1,8 @@
 use std::fmt;
 
-use ast::Stmt;
-use ast::decls::*;
-use compilation::Compilable;
+use crate::ast::Stmt;
+use crate::ast::decls::*;
+use crate::compilation::{Compilable, Scope};
 
 pub enum Node {
     ClassDecl(ClassDecl),
@@ -12,15 +12,15 @@ pub enum Node {
 }
 
 impl Compilable for Node {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         match self {
-            &Node::ClassDecl(ref decl) => decl.compile(),
+            &Node::ClassDecl(ref decl) => decl.compile(scope),
 
-            &Node::EnumDecl(ref decl) => decl.compile(),
+            &Node::EnumDecl(ref decl) => decl.compile(scope),
 
-            &Node::FuncDecl(ref decl) => decl.compile(),
+            &Node::FuncDecl(ref decl) => decl.compile(scope),
 
-            &Node::Stmt(ref stmt) => stmt.compile()
+            &Node::Stmt(ref stmt) => stmt.compile(scope)
         }
     }
 }

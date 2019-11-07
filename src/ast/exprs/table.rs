@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::Expr;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Table {
@@ -31,7 +31,7 @@ impl Into<Expr> for Table {
 }
 
 impl Compilable for Table {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         let mut compiled = String::new();
 
         compiled.push('{');
@@ -40,7 +40,7 @@ impl Compilable for Table {
             // Should be guaranteed as we have authority of `len`
             let (key, value) = (self.items.0.get(i).unwrap(), self.items.1.get(i).unwrap());
 
-            compiled.push_str(&format!(r#"[{}] = {}"#, key.compile(), value.compile()));
+            compiled.push_str(&format!(r#"[{}] = {}"#, key.compile(scope), value.compile(scope)));
 
             if i + 1 < self.len {
                 compiled.push_str(", ")

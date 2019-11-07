@@ -1,6 +1,6 @@
-use ast::Expr;
-use compilation::Compilable;
-use lexer::Literal;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
+use crate::lexer::Literal;
 use std::fmt;
 
 #[derive(Clone)]
@@ -13,7 +13,7 @@ pub enum Const {
 }
 
 impl Compilable for Const {
-    fn compile(&self) -> String {
+    fn compile(&self, _scope: &Scope) -> String {
         match self {
             &Const::Bool(value) => value.to_string(),
 

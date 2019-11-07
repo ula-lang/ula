@@ -1,6 +1,7 @@
 #![feature(specialization, test)]
 
-extern crate plex;
+#[macro_use]
+extern crate derivative;
 
 pub mod ast;
 pub mod compilation;

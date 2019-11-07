@@ -1,8 +1,8 @@
-use parser::parselets::Led;
-use parser::Parser;
-use ast::Expr;
-use lexer::{Op, Token};
-use ast::exprs::Dot;
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
+use crate::ast::Expr;
+use crate::lexer::{Op, Token};
+use crate::ast::exprs::Dot;
 
 pub struct DotParselet;
 

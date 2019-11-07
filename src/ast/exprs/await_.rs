@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 /// Await expression (await <expr>)
 #[derive(Clone)]
@@ -19,8 +19,8 @@ impl Await {
 }
 
 impl Compilable for Await {
-    fn compile(&self) -> String {
-        format!("{}:GetAwaiter():GetResult()", self.expr.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("{}:GetAwaiter():GetResult()", self.expr.compile(scope))
     }
 }
 

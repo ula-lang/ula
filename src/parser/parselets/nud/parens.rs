@@ -1,8 +1,8 @@
-use ast::Expr;
-use ast::exprs::Parens;
-use lexer::Token;
-use parser::parselets::Nud;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::ast::exprs::Parens;
+use crate::lexer::Token;
+use crate::parser::parselets::Nud;
+use crate::parser::Parser;
 
 pub struct ParensParselet;
 

@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::Expr;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Index {
@@ -19,8 +19,8 @@ impl Index {
 }
 
 impl Compilable for Index {
-    fn compile(&self) -> String {
-        format!("{}[{}]", self.lhs.compile(), self.index.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("{}[{}]", self.lhs.compile(scope), self.index.compile(scope))
     }
 }
 

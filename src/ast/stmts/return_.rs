@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::{Expr, Stmt};
-use compilation::Compilable;
+use crate::ast::{Expr, Stmt};
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Return {
@@ -17,13 +17,13 @@ impl Return {
 }
 
 impl Compilable for Return {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         let mut compiled = String::new();
 
         compiled.push_str("return");
 
         if let Some(ref expr) = self.expr {
-            compiled.push_str(&format!(" {}", expr.compile()));
+            compiled.push_str(&format!(" {}", expr.compile(scope)));
         }
 
         compiled.push(';');

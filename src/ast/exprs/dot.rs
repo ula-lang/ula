@@ -1,5 +1,5 @@
-use ast::Expr;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
 use std::fmt;
 
 #[derive(Clone)]
@@ -18,8 +18,8 @@ impl Dot {
 }
 
 impl Compilable for Dot {
-    fn compile(&self) -> String {
-        format!("{}.{}", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("{}.{}", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

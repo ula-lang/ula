@@ -1,8 +1,8 @@
-use ast::Expr;
-use ast::exprs::Index;
-use lexer::Token;
-use parser::parselets::Led;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::ast::exprs::Index;
+use crate::lexer::Token;
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
 
 pub struct IndexParselet;
 

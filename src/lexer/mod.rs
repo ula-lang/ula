@@ -1,13 +1,17 @@
 mod keyword;
+
 pub use self::keyword::Keyword;
 
 mod literal;
+
 pub use self::literal::Literal;
 
 mod op;
+
 pub use self::op::Op;
 
 mod token;
+
 pub use self::token::Token;
 
 pub struct Lexer;
@@ -19,7 +23,7 @@ impl Lexer {
                 Keyword,
                 Literal,
                 Op,
-                Token
+                Token,
             };
             use plex::lexer;
 
@@ -41,15 +45,17 @@ impl Lexer {
                 r"\)" => Ok(Token::RParens),
                 r"\[" => Ok(Token::LBracket),
                 r"\]" => Ok(Token::RBracket),
-                ":" => Ok(Token::Colon),
-                "," => Ok(Token::Comma),
+                ":"   => Ok(Token::Colon),
+                ","   => Ok(Token::Comma),
                 r"\~" => Ok(Token::Tilda),
-                ";" => Ok(Token::Semicolon),
+                ";"   => Ok(Token::Semicolon),
 
 
                 // Keyword
                 "async"    => Ok(Keyword::Async.into()),
                 "await"    => Ok(Keyword::Await.into()),
+                "break"    => Ok(Keyword::Break.into()),
+                "case"     => Ok(Keyword::Case.into()),
                 "class"    => Ok(Keyword::Class.into()),
                 "else"     => Ok(Keyword::Else.into()),
                 "enum"     => Ok(Keyword::Enum.into()),
@@ -67,6 +73,7 @@ impl Lexer {
                 "new"      => Ok(Keyword::New.into()),
                 "return"   => Ok(Keyword::Return.into()),
                 "static"   => Ok(Keyword::Static.into()),
+                "switch"   => Ok(Keyword::Switch.into()),
                 "while"    => Ok(Keyword::While.into()),
                 "yield"    => Ok(Keyword::Yield.into()),
 
@@ -107,7 +114,7 @@ impl Lexer {
                     r"\+="  => Ok(Op::AddAssign.into()),
                     "&="    => Ok(Op::BAndAssign.into()),
                     r"\|="  => Ok(Op::BOrAssign.into()),
-                    r"--" => Ok(Op::Decr.into()),
+                    r"--"   => Ok(Op::Decr.into()),
                     "/="    => Ok(Op::DivAssign.into()),
                     r"\+\+" => Ok(Op::Incr.into()),
                     "<<="   => Ok(Op::LShiftAssign.into()),
@@ -119,10 +126,10 @@ impl Lexer {
 
                     // Arithmetic
                     r"\+" => Ok(Op::Add.into()),
-                    "-" => Ok(Op::Sub.into()),
+                    "-"   => Ok(Op::Sub.into()),
                     r"\*" => Ok(Op::Mul.into()),
-                    "/" => Ok(Op::Div.into()),
-                    "%" => Ok(Op::Mod.into()),
+                    "/"   => Ok(Op::Div.into()),
+                    "%"   => Ok(Op::Mod.into()),
 
                     // Comparison
                     "==" => Ok(Op::Eq.into()),
@@ -135,22 +142,23 @@ impl Lexer {
                     // Logical
                     r"\&\&" => Ok(Op::LAnd.into()),
                     r"\|\|" => Ok(Op::LOr.into()),
-                    "!"  => Ok(Op::Not.into()),
+                    "!"     => Ok(Op::Not.into()),
 
                     // Bitwise
                     r"\&"  => Ok(Op::BAnd.into()),
                     r"\|"  => Ok(Op::BOr.into()),
                     r"\^"  => Ok(Op::Xor.into()),
-                    "<<" => Ok(Op::LShift.into()),
-                    ">>" => Ok(Op::RShift.into()),
+                    "<<"   => Ok(Op::LShift.into()),
+                    ">>"   => Ok(Op::RShift.into()),
 
                     // Misc
-                    r"\.\." => Ok(Op::Concat.into()),
-                    r"\?" => Ok(Op::Cond.into()),
-                    r"\." => Ok(Op::Dot.into()),
+                    r"\?\?"   => Ok(Op::Coalesce.into()),
+                    r"\.\."   => Ok(Op::Concat.into()),
+                    r"\?"     => Ok(Op::Cond.into()),
+                    r"\."     => Ok(Op::Dot.into()),
                     r"\.\.\." => Ok(Op::Ellipsis.into()),
-                    r"\$" => Ok(Op::Interp.into()),
-                    "#" => Ok(Op::Len.into()),
+                    r"\$"     => Ok(Op::Interp.into()),
+                    "#"       => Ok(Op::Len.into()),
 
                 // Identifier
                 "[a-zA-Z_][a-zA-Z0-9_]*" => Ok(Token::Ident(text.to_owned())),

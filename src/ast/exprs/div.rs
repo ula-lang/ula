@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::Expr;
-use compilation::Compilable;
+use crate::ast::Expr;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct Div {
@@ -25,8 +25,8 @@ impl Into<Expr> for Div {
 }
 
 impl Compilable for Div {
-    fn compile(&self) -> String {
-        format!("({} / {})", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("({} / {})", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 /// Unary not expression ("!")
 #[derive(Clone)]
@@ -19,8 +19,8 @@ impl Not {
 }
 
 impl Compilable for Not {
-    fn compile(&self) -> String {
-        format!("(not {})", self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("(not {})", self.rhs.compile(scope))
     }
 }
 

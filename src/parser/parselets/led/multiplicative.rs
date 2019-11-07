@@ -1,8 +1,8 @@
-use ast::Expr;
-use lexer::{Op, Token};
-use parser::parselets::Led;
-use parser::Parser;
-use ast::exprs::{Div, Mod, Mul};
+use crate::ast::Expr;
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
+use crate::ast::exprs::{Div, Mod, Mul};
 
 pub struct MultiplicativeParselet;
 

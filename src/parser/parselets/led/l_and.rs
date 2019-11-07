@@ -1,8 +1,8 @@
-use ast::Expr;
-use ast::exprs::LAnd;
-use lexer::{Op, Token};
-use parser::parselets::Led;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::ast::exprs::LAnd;
+use crate::lexer::{Op, Token};
+use crate::parser::parselets::Led;
+use crate::parser::Parser;
 
 pub struct LAndParselet;
 

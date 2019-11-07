@@ -4,6 +4,8 @@ use std::fmt;
 pub enum Keyword {
     Async,
     Await,
+    Break,
+    Case,
     Class,
     Else,
     Enum,
@@ -21,6 +23,7 @@ pub enum Keyword {
     New,
     Return,
     Static,
+    Switch,
     While,
     Yield
 }
@@ -32,6 +35,8 @@ impl fmt::Display for Keyword {
         match self {
             &Keyword::Async => write!(f, "async"),
             &Keyword::Await => write!(f, "await"),
+            &Keyword::Break => write!(f, "break"),
+            &Keyword::Case => write!(f, "case"),
             &Keyword::Class => write!(f, "class"),
             &Keyword::Else => write!(f, "else"),
             &Keyword::Enum => write!(f, "enum"),
@@ -49,6 +54,7 @@ impl fmt::Display for Keyword {
             &Keyword::New => write!(f, "new"),
             &Keyword::Return => write!(f, "return"),
             &Keyword::Static => write!(f, "static"),
+            &Keyword::Switch => write!(f, "switch"),
             &Keyword::While => write!(f, "while"),
             &Keyword::Yield => write!(f, "yield")
         }?;

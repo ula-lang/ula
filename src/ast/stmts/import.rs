@@ -1,8 +1,8 @@
-use ast::exprs::{Const, FCall, Index, Ref};
-use ast::stmts::VarDecl;
-use compilation::Compilable;
+use crate::ast::exprs::{Const, FCall, Index, Ref};
+use crate::ast::stmts::VarDecl;
+use crate::compilation::{Compilable, Scope};
 use std::fmt;
-use ast::Stmt;
+use crate::ast::Stmt;
 
 #[derive(Clone)]
 pub struct Import {
@@ -20,7 +20,7 @@ impl Import {
 }
 
 impl Compilable for Import {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         let init_exprs = {
             let mut init_exprs = Vec::new();
 
@@ -38,7 +38,7 @@ impl Compilable for Import {
             init_exprs
         };
 
-        VarDecl::new(self.idents.clone(), Some(init_exprs)).compile()
+        VarDecl::new(self.idents.clone(), Some(init_exprs)).compile(scope)
     }
 }
 

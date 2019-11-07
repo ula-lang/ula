@@ -1,6 +1,6 @@
-use ast::Expr;
-use lexer::Token;
-use parser::Parser;
+use crate::ast::Expr;
+use crate::lexer::Token;
+use crate::parser::Parser;
 
 pub mod led;
 pub mod nud;

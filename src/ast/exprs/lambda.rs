@@ -1,9 +1,9 @@
 use std::fmt;
 
-use ast::{Expr, Stmt};
-use compilation::Compilable;
-use ast::exprs::{Assignment, Cond, Const, Dot, Eq, FCall, Ref};
-use ast::stmts::{Import, Return};
+use crate::ast::{Expr, Stmt};
+use crate::compilation::{Compilable, Scope};
+use crate::ast::exprs::{Assignment, Cond, Const, Dot, Eq, FCall, Ref};
+use crate::ast::stmts::{Import, Return};
 
 #[derive(Clone)]
 pub struct Lambda {
@@ -55,10 +55,10 @@ impl Lambda {
 }
 
 impl Compilable for Lambda {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
         let mut compiled = String::new();
 
-        compiled.push_str("function (");
+        compiled.push_str("(function (");
 
         for (i, ident) in self.param_idents.iter().enumerate() {
             compiled.push_str(ident);
@@ -90,12 +90,12 @@ impl Compilable for Lambda {
                 ).into()
             ];
 
-            compiled.push_str(&async_body.compile_indented(1));
+            compiled.push_str(&async_body.compile_indented(scope, 1));
         } else {
-            compiled.push_str(&self.body.compile_indented(1));
+            compiled.push_str(&self.body.compile_indented(scope, 1));
         }
 
-        compiled.push_str("\r\nend");
+        compiled.push_str("\r\nend)");
 
         compiled
     }

@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct BAnd {
@@ -20,8 +20,8 @@ impl BAnd {
 }
 
 impl Compilable for BAnd {
-    fn compile(&self) -> String {
-        format!("bit.band({}, {})", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("bit.band({}, {})", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

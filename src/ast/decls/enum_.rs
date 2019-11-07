@@ -1,7 +1,7 @@
 use std::fmt;
 
-use ast::{Expr, Node};
-use compilation::Compilable;
+use crate::ast::{Expr, Node};
+use crate::compilation::{Compilable, Scope};
 
 pub struct EnumDecl {
     flags: (bool,),
@@ -24,7 +24,9 @@ impl EnumDecl {
 }
 
 impl Compilable for EnumDecl {
-    fn compile(&self) -> String {
+    fn compile(&self, scope: &Scope) -> String {
+        scope.add_enum(&self.ident);
+
         let mut compiled = String::new();
 
         compiled.push_str(&format!("--[[ Begin enum: {:?} ]]--\r\n", self.ident));
@@ -41,7 +43,7 @@ impl Compilable for EnumDecl {
 
             match def {
                 &Some(ref def) => {
-                    compiled.push_str(&def.compile());
+                    compiled.push_str(&def.compile(scope));
                 }
 
                 &None => {

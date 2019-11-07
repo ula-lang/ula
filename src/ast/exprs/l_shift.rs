@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct LShift {
@@ -20,8 +20,8 @@ impl LShift {
 }
 
 impl Compilable for LShift {
-    fn compile(&self) -> String {
-        format!("(bit.lshift({}, {}))", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("(bit.lshift({}, {}))", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 

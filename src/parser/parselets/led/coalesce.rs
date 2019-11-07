@@ -1,21 +1,21 @@
 use crate::ast::Expr;
-use crate::ast::exprs::BAnd;
+use crate::ast::exprs::Coalesce;
 use crate::lexer::{Op, Token};
 use crate::parser::parselets::Led;
 use crate::parser::Parser;
 
-pub struct BAndParselet;
+pub struct CoalesceParselet;
 
-impl Led for BAndParselet {
+impl Led for CoalesceParselet {
     fn parse(&self, parser: &mut Parser, lhs: Expr, token: Token) -> Result<Expr, String> {
-        assert_eq!(token, Token::Op(Op::BAnd));
+        assert_eq!(token, Token::Op(Op::Coalesce));
 
-        let rhs = parser.parse_expr(Some(self.get_precedence()))?;
+        let rhs = parser.parse_expr(None)?;
 
-        Ok(BAnd::new(lhs, rhs).into())
+        Ok(Coalesce::new(lhs, rhs).into())
     }
 
     fn get_precedence(&self) -> i8 {
-        7
+        2
     }
 }

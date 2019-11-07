@@ -2,7 +2,7 @@ use super::super::Expr;
 
 use std::fmt;
 
-use compilation::Compilable;
+use crate::compilation::{Compilable, Scope};
 
 #[derive(Clone)]
 pub struct LAnd {
@@ -20,8 +20,8 @@ impl LAnd {
 }
 
 impl Compilable for LAnd {
-    fn compile(&self) -> String {
-        format!("({} and {})", self.lhs.compile(), self.rhs.compile())
+    fn compile(&self, scope: &Scope) -> String {
+        format!("({} and {})", self.lhs.compile(scope), self.rhs.compile(scope))
     }
 }
 
