@@ -25,14 +25,14 @@ impl Lambda {
             param_idents.push(ident.clone());
 
             if let Some(default) = maybe_default {
-                let ident_var = Ref::new(ident);
+                let ident_var = Ref::new(&ident);
 
                 body.insert(
                     i,
                     Stmt::Expr(
                         Assignment::new(
-                            ident_var.clone(),
-                            Cond::new(Eq::new(ident_var.clone(), Const::Nil), default, ident_var),
+                            vec![ident_var.clone()],
+                            vec![Cond::new(Eq::new(ident_var.clone(), Const::Nil), default, ident_var)],
                         ).into(),
                     ),
                 );

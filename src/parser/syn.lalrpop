@@ -1,0 +1,368 @@
+use std::collections::HashSet;
+use std::str::FromStr;
+
+use lalrpop_util::{ErrorRecovery, ParseError};
+
+use crate::ast::{Expr, Node, Stmt, Tree};
+use crate::ast::decls::*;
+use crate::ast::exprs::*;
+use crate::ast::stmts::*;
+use crate::parser::util::validate_flags;
+
+grammar<'err>(errors: &'err mut Vec<ErrorRecovery<usize, Token<'input>, &'static str>>);
+
+pub Tree: Tree = Node* => <>.into();
+
+pub Node: Node = {
+    ClassDecl => <>.into(),
+    EnumDecl => <>.into(),
+    FuncDecl => <>.into(),
+    Stmt => <>.into()
+}
+
+ClassDecl: ClassDecl = <f:Flags> "class" <i:Ident> <p:("extends" <Ident>)?> "{" <mut b:ClassBodyDecls> "}"
+    =>? {
+        let flags = (f.contains("local"), f.contains("static"));
+
+        let ctor = match flags.1 {
+            true => None,
+
+            false => {
+                let mut ctor = None;
+
+                for j in 0..b.1.len() {
+                    if b.1[j].ident == i {
+                        ctor = Some(b.1.remove(j));
+                        break;
+                    }
+                }
+
+                match ctor {
+                    None => return Err(ParseError::User { error: "No constructor found" }),
+                    _ => ctor
+                }
+            }
+        };
+
+        Ok(ClassDecl::new(flags, i, p, ctor, b.0, b.1))
+    };
+
+ClassBodyDecls: (Vec<(String, Option<Expr>)>, Vec<FuncDecl>) = {
+    ClassFieldDecl => (vec![], Vec::new()),
+
+    FuncDecl => (Vec::new(), vec![<>]),
+
+    <mut b:ClassBodyDecls> <f:ClassFieldDecl> =>? {
+        if b.0.iter().any(|cf| cf.0 == f.0) {
+            return Err(ParseError::User { error: "Duplicate field definition" })
+        }
+
+        b.0.push(f);
+
+        Ok(b)
+    },
+
+    <mut b:ClassBodyDecls> <m:FuncDecl> =>? {
+        if b.1.iter().any(|cm| cm.ident == m.ident) {
+            return Err(ParseError::User { error: "Duplicate method definition" })
+        }
+
+        b.1.push(m);
+
+        Ok(b)
+    }
+}
+
+ClassFieldDecl = <Ident> <("=" <Expr>)?> ";";
+
+EnumDecl: EnumDecl = <flags:Flags> "enum" <ident:Ident> "{" <fields:List<EnumField>> "}" =>? {
+    validate_flags(&flags, &["local"])?;
+    Ok(EnumDecl::new((flags.contains("local"),), ident, fields))
+};
+
+EnumField = <Ident> <("=" <Const>)?>;
+
+FuncDecl: FuncDecl = <f:Flags> "function" <i:FuncIdent> "(" <p:Params> ")" <b:Block> =>
+    FuncDecl::new((f.contains("local"), f.contains("static"), f.contains("async")), i, p, b).into();
+
+FuncDeclFlag = { "async", "local" }
+
+FuncIdent: String = {
+    <Ident>,
+    <FuncIdent> "." <Ident> => format!("{}.{}", <>)
+}
+
+pub Stmt: Stmt = {
+    Export,
+    For,
+    IfElse,
+    Import,
+    Return,
+    SwitchCase,
+    VarDecl,
+    While,
+    Yield,
+    <Assignment> ";" => <>.into()
+}
+
+Export: Stmt = "export" <RefList> ";" => Export::new(<>).into();
+
+For: Stmt = "for" "(" <VarDecl> <Expr> ";" <Assignment> ")" <Block> => For::new(<>).into();
+
+IfElse: Stmt = "if" <Expr> <Block> <Else?> => IfElse::new(<>).into();
+Else: Vec<Stmt> = {
+    "else" <Block>,
+    "else" <IfElse> => vec![<>.into()]
+}
+
+Import: Stmt = "import" <IdentList> "from" <StringLiteral> ";" => Import::new(<>).into();
+
+Return: Stmt = "return" <Expr?> ";" => Return::new(<>).into();
+
+SwitchCase: Stmt = "switch" <Expr> "{" <Case+> "}" => SwitchCase::new(<>).into();
+Case = "case" <Ref> ":" <Stmt*>;
+
+VarDecl: Stmt = "let" <IdentList> <("=" <ExprList>)?> ";" => VarDecl::new(<>).into();
+
+While: Stmt = "while" <Expr> <Block> => While::new(<>).into();
+
+Yield: Stmt = "yield" <Expr?> ";" => Yield::new(<>).into();
+
+// Treated as a statement, in Lua assignments do not evaluate to any value thus can't be considered expressions
+Assignment: Expr = {
+    <RefList> "=" <ExprList> => Assignment::new(<>).into(),
+    <r:Ref> "+=" <e:Expr> => Assignment::new(vec![r.clone()], vec![Sum::new(r, e)]).into(),
+    <r:Ref> "-=" <e:Expr> => Assignment::new(vec![r.clone()], vec![Sub::new(r, e)]).into(),
+    <r:Ref> "*=" <e:Expr> => Assignment::new(vec![r.clone()], vec![Mul::new(r, e)]).into(),
+    <r:Ref> "/=" <e:Expr> => Assignment::new(vec![r.clone()], vec![Div::new(r, e)]).into(),
+    <r:Ref> "%=" <e:Expr> => Assignment::new(vec![r.clone()], vec![Mod::new(r, e)]).into(),
+    <r:Ref> "&=" <e:Expr> => Assignment::new(vec![r.clone()], vec![BAnd::new(r, e)]).into(),
+    <r:Ref> "|=" <e:Expr> => Assignment::new(vec![r.clone()], vec![BOr::new(r, e)]).into(),
+    <r:Ref> "^=" <e:Expr> => Assignment::new(vec![r.clone()], vec![Xor::new(r, e)]).into(),
+    <r:Ref> "<<=" <e:Expr> => Assignment::new(vec![r.clone()], vec![LShift::new(r, e)]).into(),
+    <r:Ref> ">>=" <e:Expr> => Assignment::new(vec![r.clone()], vec![RShift::new(r, e)]).into(),
+    PostfixAssignment
+}
+
+// Postfix assignment operators don't YET return so it doesn't make sense for them to be in the primary postfix group
+PostfixAssignment: Expr = {
+    <Ref> "++" => Assignment::new(vec![<>.clone()], vec![Sum::new(<>, 1)]).into(),
+    <Ref> "--" => Assignment::new(vec![<>.clone()], vec![Sub::new(<>, 1)]).into(),
+    Expr
+}
+
+pub Expr: Expr = {
+    TableLiteral,
+    Lambda
+}
+
+TableLiteral: Expr = {
+    "{" <Comma<(<(<TableKey> "=")?> <Expr>)>> "}" => {
+        let mut t = Table::new();
+
+        let mut i = 0;
+
+        for (k, v) in <> {
+            t.insert(k.unwrap_or(Const::Int(i).into()), v);
+
+            i += 1;
+        }
+
+        t.into()
+    }
+}
+
+TableKey: Expr = {
+    "[" <Expr> "]",
+    Ident => Ref::new(<>).into()
+}
+
+Lambda: Expr = {
+    <a:"async"?> "||" <b:Block> => Lambda::new((a.is_some(),), Vec::new(), b).into(),
+    <a:"async"?> "|" <p:Params> "|" <b:Block> => Lambda::new((a.is_some(),), p, b).into(),
+    <a:"async"?> "||" <e:Cond> => Lambda::new((a.is_some(),), Vec::new(), vec![Return::new(Some(e)).into()]).into(),
+    <a:"async"?> "|" <p:Params> "|" <e:Cond> => Lambda::new((a.is_some(),), p, vec![Return::new(Some(e)).into()]).into(),
+
+    Cond
+}
+
+Cond: Expr = {
+    <Cond> "?" <LogOr> "~" <LogOr> => Cond::new(<>).into(),
+    Coalesce
+}
+
+Coalesce: Expr = {
+    <LogOr> "??" <Coalesce> => Coalesce::new(<>).into(),
+    LogOr
+}
+
+LogOr: Expr = {
+    <LogOr> "||" <LogAnd> => LOr::new(<>).into(),
+    LogAnd
+}
+
+LogAnd: Expr = {
+    <LogAnd> "&&" <BitOr> => LAnd::new(<>).into(),
+    BitOr
+}
+
+BitOr: Expr = {
+    <BitOr> "|" <Xor> => BOr::new(<>).into(),
+    Xor
+}
+
+Xor: Expr = {
+    <Xor> "^" <BitAnd> => Xor::new(<>).into(),
+    BitAnd
+}
+
+BitAnd: Expr = {
+    <BitAnd> "&" <Equality> => BAnd::new(<>).into(),
+    Equality
+}
+
+Equality: Expr = {
+   <Equality> "==" <Relational> => Eq::new(<>).into(),
+   <Equality> "!=" <Relational> => Ne::new(<>).into(),
+   Relational
+}
+
+Relational: Expr = {
+    <Relational> "<" <Shift> => Lt::new(<>).into(),
+    <Relational> "<=" <Shift> => LtEq::new(<>).into(),
+    <Relational> ">" <Shift> => Gt::new(<>).into(),
+    <Relational> ">=" <Shift> => GtEq::new(<>).into(),
+    Concat
+}
+
+Concat: Expr = {
+    <Shift> ".." <Concat> => Concat::new(<>).into(),
+    Shift
+}
+
+Shift: Expr = {
+    <Shift> "<<" <Additive> => LShift::new(<>).into(),
+    <Shift> ">>" <Additive> => RShift::new(<>).into(),
+    Additive
+}
+
+Additive: Expr = {
+    <Additive> "+" <Multiplicative> => Sum::new(<>).into(),
+    <Additive> "-" <Multiplicative> => Sub::new(<>).into(),
+    Multiplicative
+}
+
+Multiplicative: Expr = {
+    <Multiplicative> "*" <Factor> => Mul::new(<>).into(),
+    <Multiplicative> "/" <Factor> => Div::new(<>).into(),
+    <Multiplicative> "%" <Factor> => Mod::new(<>).into(),
+    Prefix
+}
+
+Prefix: Expr = {
+    "-" <Postfix> => Neg::new(<>).into(),
+    "!" <Postfix> => Not::new(<>).into(),
+    "#" <Postfix> => Len::new(<>).into(),
+    "await" <Postfix> => Await::new(<>).into(),
+    "new" <i:Ident> "(" <a:Args> ")" => New::new(i.clone(), FCall::new(Ref::new(i), a)).into(),
+    Postfix
+}
+
+Postfix: Expr = {
+    <Factor> "[" <Expr> "]" => Index::new(<>).into(),
+    <Factor> "(" <Args> ")" => FCall::new(<>).into(),
+    <l:Factor> ":" <i:Ident>  "(" <a:Args> ")" => MCall::new(l, FCall::new(Ref::new(i), a)).into(),
+    Factor
+}
+
+Factor: Expr = {
+    Ref => <>,
+    Const => <>,
+    "(" <Expr> ")",
+    ! => {
+        errors.push(<>);
+        Expr::Error
+    }
+}
+
+Ref: Expr = {
+    Ident => Ref::new(<>).into(),
+    <r:Ref> "." <i:Ident> => Dot::new(r, Ref::new(i)).into()
+}
+
+Ident: String = {
+    r"[a-zA-Z_][a-zA-Z0-9_]*" => <>.to_owned()
+}
+
+Const: Expr = {
+    "true" => true.into(),
+    "false" => false.into(),
+    r"-?[0-9]+" => i64::from_str(<>).unwrap().into(),
+    r"-?[0-9]+\.[0-9]+" => f64::from_str(<>).unwrap().into(),
+    "nil" => Const::Nil.into(),
+    StringLiteral => Const::String(<>).into()
+}
+
+StringLiteral: String = r#""(\\.|[^"\\])*""# => <>[1..<>.len() - 1].to_owned();
+
+// Helpers
+Args = Comma<Expr>;
+Params = Comma<Param>;
+
+ExprList = List<Expr>;
+IdentList = List<Ident>;
+RefList = List<Ref>;
+
+StmtList: Vec<Stmt> = {
+    <Stmt> => vec![<>],
+    <l:StmtList> <s:Stmt> => {
+        let mut l = l;
+        l.push(s);
+        l
+    }
+}
+
+Param: (String, Option<Expr>) = {
+    <Ident> <("=" <Ref>)?>,
+    "..." => (<>.to_owned(), None)
+}
+
+#[inline]
+Block = "{" <Stmt*> "}";
+
+Flags: HashSet<&'input str> = {
+    <Flag*> =>? {
+        let mut hs = HashSet::new();
+
+        for f in <> {
+            if !hs.insert(f) {
+                return Err(ParseError::User { error: "Duplicate flag" })
+            }
+        }
+
+        Ok(hs)
+    }
+}
+
+Flag = { "local", "static", "async" }
+
+// Macros
+Comma<T>: Vec<T> = {
+    <v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            let mut v = v;
+            v.push(e);
+            v
+        }
+    }
+}
+
+List<T>: Vec<T> = {
+    <T> => vec![<>],
+    <l:List<T>> "," <e:T> => {
+        let mut l = l;
+        l.push(e);
+        l
+    }
+}

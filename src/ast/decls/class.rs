@@ -6,6 +6,7 @@ use crate::ast::stmts::{IfElse, Return, VarDecl};
 use crate::ast::exprs::{Assignment, Const, Eq, FCall, Table, Ref};
 use crate::compilation::{Compilable, Scope};
 
+#[derive(Clone)]
 pub struct ClassDecl {
     /// 0: Local, 1: Static
     flags: (bool, bool),
@@ -60,7 +61,7 @@ impl ClassDecl {
 
             ctor.body_mut().insert(0, {
                 IfElse::new(Eq::new(Ref::new("self"), Const::Nil), vec![
-                    Stmt::Expr(Assignment::new(Ref::new("self"), Table::new()).into()),
+                    Stmt::Expr(Assignment::new(vec![Ref::new("self")], vec![Table::new()]).into()),
                     Stmt::Expr(FCall::new(Ref::new("setmetatable"), vec![
                         Ref::new("self").into(),
                         Ref::new(ident.clone()).into()

@@ -2,7 +2,11 @@ use crate::ast::decls::FuncDecl;
 use crate::ast::Expr;
 use crate::ast::stmts::*;
 use crate::compilation::{Compilable, Scope};
-use std::fmt;
+use std::{fmt, io};
+use ptree::{TreeItem, Style, print_tree_with, PrintConfig, write_tree, TreeBuilder};
+use std::io::Error;
+use std::borrow::Cow;
+use crate::debug::TreeNode;
 
 #[derive(Clone)]
 pub enum Stmt {
@@ -145,5 +149,23 @@ impl fmt::Debug for Stmt {
         }
 
         write!(f, ")")
+    }
+}
+
+impl TreeNode for Stmt {
+    fn write_tree(&self, builder: &mut TreeBuilder) {
+        builder.begin_child("Stmt".to_owned());
+
+        match self {
+            // &Stmt::Break => write!(f, "{}", style.paint("break")),
+
+            // &Stmt::Export(ref stmt) => unimplemented!(),
+
+            Stmt::Expr(expr) => expr.write_tree(builder),
+
+            _ => unimplemented!()
+        }
+
+        builder.end_child();
     }
 }

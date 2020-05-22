@@ -1,4 +1,7 @@
-use std::fmt;
+use std::{fmt, io};
+use std::borrow::Cow;
+
+use ptree::{Style, TreeItem};
 
 use crate::ast::Expr;
 use crate::compilation::{Compilable, Scope};
@@ -35,3 +38,15 @@ impl fmt::Debug for Div {
         write!(f, "Div({:?}, {:?})", self.lhs, self.rhs)
     }
 }
+
+// impl TreeItem for Div {
+//     type Child = Expr;
+//
+//     fn write_self<W: io::Write>(&self, f: &mut W, style: &Style) -> io::Result<()> {
+//         write!(f, "{}", style.paint("div"))
+//     }
+//
+//     fn children(&self) -> Cow<[Self::Child]> {
+//         Cow::from(vec![*self.lhs.clone(), *self.rhs.clone()])
+//     }
+// }

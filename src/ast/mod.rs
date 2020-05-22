@@ -1,6 +1,11 @@
-use std::fmt;
+use std::{fmt, io};
+use std::borrow::Cow;
+use std::io::{Cursor, Error};
+
+use ptree::{print_tree, Style, TreeBuilder, TreeItem};
 
 use crate::compilation::{Compilable, Scope};
+use crate::debug::TreeNode;
 
 pub use self::expr::Expr;
 pub use self::node::Node;
@@ -14,8 +19,16 @@ pub mod exprs;
 pub mod stmts;
 pub mod util;
 
+#[derive(Clone, Debug)]
 pub struct Tree {
     nodes: Vec<Node>
+}
+
+#[derive(Clone, Debug)]
+struct Flags {
+    pub local: bool,
+    pub static_: bool,
+    pub async_: bool,
 }
 
 impl Tree {
@@ -30,7 +43,17 @@ impl Tree {
     }
 
     pub fn nodes(&self) -> impl Iterator<Item=&Node> {
-        return self.nodes.iter();
+        self.nodes.iter()
+    }
+
+    pub fn pretty_print(&self) -> io::Result<()> {
+        let mut builder = TreeBuilder::new("Tree".to_owned());
+
+        for node in &self.nodes {
+            node.write_tree(&mut builder);
+        }
+
+        print_tree(&builder.build())
     }
 }
 
@@ -48,8 +71,10 @@ impl Compilable for Tree {
     }
 }
 
-impl fmt::Debug for Tree {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Tree(Nodes({:?}))", self.nodes)
+impl From<Vec<Node>> for Tree {
+    fn from(nodes: Vec<Node>) -> Self {
+        Self {
+            nodes
+        }
     }
 }

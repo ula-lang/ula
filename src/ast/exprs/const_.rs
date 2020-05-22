@@ -1,7 +1,12 @@
+use std::{fmt, io};
+use std::borrow::Cow;
+use std::io::Error;
+
+use ptree::{Style, TreeBuilder, TreeItem};
+
 use crate::ast::Expr;
 use crate::compilation::{Compilable, Scope};
-use crate::lexer::Literal;
-use std::fmt;
+use crate::debug::TreeNode;
 
 #[derive(Clone)]
 pub enum Const {
@@ -70,18 +75,6 @@ impl<'a> From<&'a String> for Const {
     }
 }
 
-impl From<Literal> for Const {
-    fn from(literal: Literal) -> Self {
-        match literal {
-            Literal::Bool(value) => value.into(),
-            Literal::Float(value) => value.into(),
-            Literal::Integer(value) => value.into(),
-            Literal::Nil => Const::Nil,
-            Literal::String(value) => value.into()
-        }
-    }
-}
-
 impl fmt::Debug for Const {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Const(")?;
@@ -99,5 +92,11 @@ impl fmt::Debug for Const {
         }
 
         write!(f, ")")
+    }
+}
+
+impl TreeNode for Const {
+    fn write_tree(&self, builder: &mut TreeBuilder) {
+        builder.add_empty_child(format!("{:?}", self));
     }
 }

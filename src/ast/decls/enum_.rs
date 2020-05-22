@@ -3,6 +3,7 @@ use std::fmt;
 use crate::ast::{Expr, Node};
 use crate::compilation::{Compilable, Scope};
 
+#[derive(Clone)]
 pub struct EnumDecl {
     flags: (bool,),
     ident: String,

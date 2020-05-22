@@ -28,7 +28,7 @@ impl Compilable for Ref {
 
 impl Into<Expr> for Ref {
     fn into(self) -> Expr {
-        Expr::Var(self)
+        Expr::Ref(self)
     }
 }
 
@@ -40,6 +40,6 @@ impl From<String> for Ref {
 
 impl fmt::Debug for Ref {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Var({:?})", self.ident)
+        write!(f, "Ref({:?})", self.ident)
     }
 }

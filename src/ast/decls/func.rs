@@ -37,7 +37,7 @@ impl FuncDecl {
                     IfElse::new(
                         Eq::new(ident_ref.clone(), Const::Nil),
                         vec![
-                            Stmt::Expr(Assignment::new(ident_ref.clone(), default).into())
+                            Stmt::Expr(Assignment::new(vec![ident_ref.clone()], vec![default]).into())
                         ],
                         None
                     ).into()

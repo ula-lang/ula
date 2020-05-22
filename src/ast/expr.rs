@@ -1,84 +1,90 @@
-use std::fmt;
+use std::{fmt, io};
+use std::borrow::Cow;
+
+use ptree::{Style, TreeItem, write_tree, TreeBuilder};
 
 use crate::ast::exprs::*;
 use crate::compilation::{Compilable, Scope};
+use ptree::item::StringItem;
+use crate::debug::TreeNode;
 
 #[derive(Clone, Derivative)]
 #[derivative(Debug)]
 pub enum Expr {
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Assignment(Assignment),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Await(Await),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Bracketed(Parens),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     BAnd(BAnd),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     BOr(BOr),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Coalesce(Coalesce),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Concat(Concat),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Cond(Cond),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Const(Const),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Dot(Dot),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Div(Div),
-    #[derivative(Debug="transparent")]
+    Error,
+    #[derivative(Debug = "transparent")]
     Eq(Eq),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     FCall(FCall),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Gt(Gt),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     GtEq(GtEq),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Index(Index),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Lambda(Lambda),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Len(Len),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     LAnd(LAnd),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     LOr(LOr),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     LShift(LShift),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Lt(Lt),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     LtEq(LtEq),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     MCall(MCall),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Mod(Mod),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Mul(Mul),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Ne(Ne),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Neg(Neg),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     New(New),
     None,
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Not(Not),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     RShift(RShift),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Sub(Sub),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Sum(Sum),
-    #[derivative(Debug="transparent")]
+    #[derivative(Debug = "transparent")]
     Table(Table),
-    #[derivative(Debug="transparent")]
-    Var(Ref),
-    #[derivative(Debug="transparent")]
-    Xor(Xor)
+    #[derivative(Debug = "transparent")]
+    Ref(Ref),
+    #[derivative(Debug = "transparent")]
+    Xor(Xor),
 }
 
 impl Compilable for Expr {
@@ -105,6 +111,8 @@ impl Compilable for Expr {
             &Expr::Dot(ref expr) => expr.compile(scope),
 
             &Expr::Div(ref expr) => expr.compile(scope),
+
+            &Expr::Error => "error".to_owned(),
 
             &Expr::Eq(ref expr) => expr.compile(scope),
 
@@ -154,10 +162,20 @@ impl Compilable for Expr {
 
             &Expr::Table(ref expr) => expr.compile(scope),
 
-            &Expr::Var(ref expr) => expr.compile(scope),
+            &Expr::Ref(ref expr) => expr.compile(scope),
 
             &Expr::Xor(ref expr) => expr.compile(scope)
         }
+    }
+}
+
+impl Compilable for Option<Expr> {
+    fn compile(&self, scope: &Scope) -> String {
+        match self {
+            None => &Expr::None,
+
+            Some(ref expr) => expr
+        }.compile(scope)
     }
 }
 
@@ -195,12 +213,30 @@ impl From<f64> for Expr {
     }
 }
 
-impl Compilable for Option<Expr> {
-    fn compile(&self, scope: &Scope) -> String {
-        match self {
-            None => &Expr::None,
+impl From<Expr> for Vec<Expr> {
+    fn from(expr: Expr) -> Self {
+        vec![expr]
+    }
+}
 
-            Some(ref expr) => expr
-        }.compile(scope)
+impl From<&Expr> for Expr {
+    fn from(expr: &Expr) -> Self {
+        expr.to_owned()
+    }
+}
+
+impl TreeNode for Expr {
+    fn write_tree(&self, builder: &mut TreeBuilder) {
+        builder.begin_child("Expr".to_owned());
+
+        match self {
+            Expr::Const(expr) => expr.write_tree(builder),
+
+            Expr::Sum(expr) => expr.write_tree(builder),
+
+            _ => unimplemented!()
+        }
+
+        builder.end_child();
     }
 }

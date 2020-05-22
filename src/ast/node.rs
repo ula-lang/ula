@@ -1,9 +1,14 @@
-use std::fmt;
+use std::{fmt, io};
 
 use crate::ast::Stmt;
 use crate::ast::decls::*;
 use crate::compilation::{Compilable, Scope};
+use ptree::{TreeItem, Style, write_tree, TreeBuilder};
+use std::io::Error;
+use std::borrow::Cow;
+use crate::debug::TreeNode;
 
+#[derive(Clone)]
 pub enum Node {
     ClassDecl(ClassDecl),
     EnumDecl(EnumDecl),
@@ -46,5 +51,19 @@ impl fmt::Debug for Node {
         }
 
         write!(f, ")")
+    }
+}
+
+impl TreeNode for Node {
+    fn write_tree(&self, builder: &mut TreeBuilder) {
+        match self {
+            &Node::ClassDecl(ref decl) => unimplemented!(),
+
+            &Node::EnumDecl(ref decl) => unimplemented!(),
+
+            &Node::FuncDecl(ref decl) => unimplemented!(),
+
+            &Node::Stmt(ref stmt) => stmt.write_tree(builder)
+        }
     }
 }

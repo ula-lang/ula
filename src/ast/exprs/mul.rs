@@ -1,7 +1,9 @@
-use std::fmt;
+use std::{fmt, io};
 
 use crate::ast::Expr;
 use crate::compilation::{Compilable, Scope};
+use ptree::{TreeItem, Style};
+use std::borrow::Cow;
 
 #[derive(Clone)]
 pub struct Mul {

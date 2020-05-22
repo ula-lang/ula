@@ -4,7 +4,12 @@ edition = "2018"
 version = "0.1.0"
 authors = ["Josh <josh@exasrc.com>"]
 
+[build-dependencies]
+lalrpop =  { version = "0.19", features = ["lexer"] }
+
 [dependencies]
 derivative = "1.0"
-plex = "0.2"
+lalrpop-util = "0.19"
+lazy_static = "1.4"
+ptree = "0.2"
 rand = "0.7"

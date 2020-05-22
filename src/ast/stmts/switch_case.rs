@@ -55,7 +55,7 @@ impl Compilable for SwitchCase {
         };
 
         let matched_assign = Stmt::Expr(
-            Assignment::new(matched_ref.clone(), Const::Bool(true)).into()
+            Assignment::new(vec![matched_ref.clone()], vec![Const::Bool(true)]).into()
         );
 
         // TEMP

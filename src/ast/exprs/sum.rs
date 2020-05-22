@@ -1,7 +1,11 @@
-use std::fmt;
+use std::{fmt, io};
+use std::borrow::Cow;
+
+use ptree::{Style, TreeItem, TreeBuilder};
 
 use crate::ast::Expr;
 use crate::compilation::{Compilable, Scope};
+use crate::debug::TreeNode;
 
 #[derive(Clone)]
 pub struct Sum {
@@ -33,5 +37,14 @@ impl Compilable for Sum {
 impl fmt::Debug for Sum {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Sum({:?}, {:?})", self.lhs, self.rhs)
+    }
+}
+
+impl TreeNode for Sum {
+    fn write_tree(&self, builder: &mut TreeBuilder) {
+        builder.begin_child("Sum".to_owned());
+        self.lhs.write_tree(builder);
+        self.rhs.write_tree(builder);
+        builder.end_child();
     }
 }
